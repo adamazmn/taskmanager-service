@@ -84,6 +84,7 @@ public class UserTaskService {
                         taskDTO.setDueDate(task.getDueDate());
                         taskDTO.setAttachments(task.getAttachments());
                         taskDTO.setCreatedDate(task.getCreatedDate());
+                        taskDTO.setUpdatedDate(task.getUpdatedDate());
 
                         return taskDTO;
                     }).collect(Collectors.toList());
@@ -122,6 +123,18 @@ public class UserTaskService {
         log.info("START registerUser | username={}", dto.getUsername());
 
         try {
+            // 0️⃣ Basic validation
+            if (dto.getUsername() == null || dto.getUsername().isBlank() ||
+                dto.getPassword() == null || dto.getPassword().isBlank() ||
+                dto.getEmail() == null || dto.getEmail().isBlank()) {
+                
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ResUtil.createErrorRes(
+                                String.valueOf(HttpStatus.BAD_REQUEST.value()),
+                                "Username, password, and email are required"
+                        ));
+            }
+
             // 1️⃣ Check username uniqueness
             if (usersRepository.findByUsername(dto.getUsername()).isPresent()) {
                 log.warn("Username already exists | username={}", dto.getUsername());

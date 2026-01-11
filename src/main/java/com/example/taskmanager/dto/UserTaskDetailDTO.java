@@ -26,5 +26,6 @@ public class UserTaskDetailDTO {
         private LocalDate dueDate;
         private String attachments;
         private LocalDateTime createdDate;
+        private LocalDateTime updatedDate;
     }
 }
