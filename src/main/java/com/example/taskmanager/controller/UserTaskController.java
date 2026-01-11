@@ -57,4 +57,14 @@ public class UserTaskController {
         }
     }
 
+    @PutMapping("/updateTask")
+    public ResponseEntity<?> updateTask(@RequestBody UpdateTaskDTO dto) {
+        return userTaskService.updateTask(dto);
+    }
+
+    @DeleteMapping("/deleteTask")
+    public ResponseEntity<?> deleteTask(@RequestParam String taskId) {
+        return userTaskService.deleteTask(taskId);
+    }
+
 }

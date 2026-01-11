@@ -19,7 +19,7 @@ public class UserTaskDetailDTO {
 
     @Data
     public static class TaskDetailDTO {
-
+        private String id;
         private String title;
         private String description;
         private String status;
