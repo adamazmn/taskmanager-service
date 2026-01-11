@@ -77,6 +77,7 @@ public class UserTaskService {
                         UserTaskDetailDTO.TaskDetailDTO taskDTO =
                                 new UserTaskDetailDTO.TaskDetailDTO();
 
+                        taskDTO.setId(task.getId());
                         taskDTO.setTitle(task.getTitle());
                         taskDTO.setDescription(task.getDescription());
                         taskDTO.setStatus(task.getStatus());
@@ -287,6 +288,71 @@ public class UserTaskService {
         return ResponseEntity.ok(
                 ResUtil.createSuccessRes("200", "Task created", saved.getId())
         );
+    }
+
+    @Transactional
+    public ResponseEntity<?> updateTask(UpdateTaskDTO dto) {
+        log.info("START updateTask | taskId={}", dto.getTaskId());
+
+        try {
+            Tasks task = tasksRepository.findById(dto.getTaskId())
+                    .orElseThrow(() -> new RuntimeException("Task not found"));
+
+            if (dto.getTitle() != null) {
+                task.setTitle(dto.getTitle());
+            }
+            if (dto.getDescription() != null) {
+                task.setDescription(dto.getDescription());
+            }
+            if (dto.getStatus() != null) {
+                task.setStatus(dto.getStatus());
+            }
+            if (dto.getDueDate() != null) {
+                task.setDueDate(dto.getDueDate());
+            }
+
+            task.setUpdatedDate(LocalDateTime.now());
+
+            Tasks updated = tasksRepository.save(task);
+
+            log.info("Task updated successfully | taskId={}", updated.getId());
+
+            return ResponseEntity.ok(
+                    ResUtil.createSuccessRes("200", "Task updated successfully", updated)
+            );
+
+        } catch (Exception e) {
+            log.error("ERROR updateTask | taskId={} | message={}",
+                    dto.getTaskId(), e.getMessage());
+
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ResUtil.createErrorRes("404", e.getMessage()));
+        }
+    }
+
+    @Transactional
+    public ResponseEntity<?> deleteTask(String taskId) {
+        log.info("START deleteTask | taskId={}", taskId);
+
+        try {
+            if (!tasksRepository.existsById(taskId)) {
+                log.warn("Task not found | taskId={}", taskId);
+                throw new RuntimeException("Task not found");
+            }
+
+            tasksRepository.deleteById(taskId);
+            log.info("Task deleted successfully | taskId={}", taskId);
+
+            return ResponseEntity.ok(
+                    ResUtil.createSuccessRes("200", "Task deleted successfully", taskId)
+            );
+
+        } catch (Exception e) {
+            log.error("ERROR deleteTask | taskId={} | message={}", taskId, e.getMessage());
+
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ResUtil.createErrorRes("404", e.getMessage()));
+        }
     }
 
 }
