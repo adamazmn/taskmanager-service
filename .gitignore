@@ -36,3 +36,4 @@ build/
 # Add these for sensitive data
 .env               # your local environment variables
 *.log              # all log files
+.env
