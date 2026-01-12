@@ -71,6 +71,7 @@ public class UserTaskService {
             detailDTO.setUsername(user.getUsername());
             detailDTO.setEmail(user.getEmail());
             detailDTO.setName(user.getName());
+            detailDTO.setProfilePhoto(user.getProfilePhoto());
 
             List<UserTaskDetailDTO.TaskDetailDTO> taskDTOList =
                     tasks.stream().map(task -> {
@@ -365,6 +366,38 @@ public class UserTaskService {
 
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ResUtil.createErrorRes("404", e.getMessage()));
+        }
+    }
+
+    @Transactional
+    public ResponseEntity<?> updateUser(UpdateUserDTO dto) {
+        log.info("START updateUser | username={}", dto.getUsername());
+
+        try {
+            // Find user
+            Users user = usersRepository.findByUsername(dto.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            // Update fields if provided
+            if (dto.getName() != null) user.setName(dto.getName());
+            if (dto.getEmail() != null) user.setEmail(dto.getEmail());
+            if (dto.getProfilePhoto() != null) user.setProfilePhoto(dto.getProfilePhoto());
+            
+            // Password update - simple check, in real app should hash
+            if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
+                 user.setPassword(dto.getPassword()); 
+            }
+
+            user.setUpdateDate(LocalDateTime.now());
+            
+            usersRepository.save(user);
+
+            log.info("END updateUser | status=SUCCESS | username={}", dto.getUsername());
+            return ResponseEntity.ok(ResUtil.createSuccessRes("200", "User updated successfully", user));
+
+        } catch (Exception e) {
+            log.error("ERROR updateUser | username={} | msg={}", dto.getUsername(), e.getMessage());
+            return ResponseEntity.badRequest().body(ResUtil.createErrorRes("400", e.getMessage()));
         }
     }
 

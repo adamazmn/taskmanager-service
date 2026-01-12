@@ -13,6 +13,7 @@ public class UserTaskDetailDTO {
     private String username;
     private String email;
     private String name;
+    private String profilePhoto;
 
     //  Task List
     private List<TaskDetailDTO> tasks;
