@@ -13,6 +13,7 @@ public class UserTaskDetailDTO {
     private String username;
     private String email;
     private String name;
+    private String profilePhoto;
 
     //  Task List
     private List<TaskDetailDTO> tasks;
@@ -26,5 +27,6 @@ public class UserTaskDetailDTO {
         private LocalDate dueDate;
         private String attachments;
         private LocalDateTime createdDate;
+        private LocalDateTime updatedDate;
     }
 }

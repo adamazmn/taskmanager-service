@@ -31,6 +31,11 @@ public class UserTaskController {
         return userTaskService.registerUser(dto);
     }
 
+    @PutMapping("/updateUser")
+    public ResponseEntity<?> updateUser(@RequestBody UpdateUserDTO dto) {
+        return userTaskService.updateUser(dto);
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginDTO dto) {
         return userTaskService.login(dto);

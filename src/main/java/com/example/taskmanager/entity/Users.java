@@ -38,6 +38,9 @@ public class Users {
     @Column(name = "name", length = 255)
     private String name;
 
+    @Column(name = "profile_photo", columnDefinition = "text")
+    private String profilePhoto;
+
     @CreatedBy
     @Column(name = "create_id", length = 36)
     private String createId;
