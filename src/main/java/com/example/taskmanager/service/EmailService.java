@@ -2,6 +2,7 @@ package com.example.taskmanager.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
@@ -14,24 +15,35 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
+    @Value("${spring.mail.username:}")
+    private String fromEmail;
+
     @Async
     public void sendRegistrationEmail(String to, String name) {
         log.info("Sending registration email to {}", to);
+        log.info("SMTP USER from config = {}", fromEmail);
 
-        log.info("SMTP USER (env) = {}", System.getenv("SMTP_USERNAME"));
+        // Skip if email is not configured
+        if (fromEmail == null || fromEmail.isBlank()) {
+            log.warn("Email not configured (SMTP_USERNAME not set). Skipping email send.");
+            return;
+        }
+
         try {
             SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
             message.setTo(to);
-            message.setSubject("Welcome to Task Manager!");
+            message.setSubject("Welcome to MYDAILY Task Manager!");
             message.setText("Hi " + name + ",\n\n" +
-                    "Welcome to our Task Manager app! Your account has been successfully created.\n\n" +
+                    "Welcome to MYDAILY Task Manager! Your account has been successfully created.\n\n" +
+                    "You can now log in and start managing your tasks.\n\n" +
                     "Best regards,\n" +
-                    "The Task Manager Team");
+                    "The MYDAILY Team");
             
             mailSender.send(message);
             log.info("Email sent successfully to {}", to);
         } catch (Exception e) {
-            log.error("Failed to send email to {}: {}", to, e.getMessage());
+            log.error("Failed to send email to {}: {}", to, e.getMessage(), e);
         }
     }
 }
