@@ -34,9 +34,6 @@ public class FileController {
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
                     .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
-                    .header("X-Frame-Options", "ALLOWALL")
-                    .header("Content-Security-Policy", "frame-ancestors 'self' http://localhost:4200")
-                    .header(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:4200")
                     .body(resource);
 
         } catch (MalformedURLException e) {
