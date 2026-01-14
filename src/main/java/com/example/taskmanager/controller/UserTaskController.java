@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/task")
 public class UserTaskController {
@@ -47,12 +49,12 @@ public class UserTaskController {
     )
     public ResponseEntity<?> createTask(
             @RequestParam("data") String data,
-            @RequestParam(value = "file", required = false) MultipartFile file
+            @RequestParam(value = "files", required = false) List<MultipartFile> files
     ) {
 
         try {
             CreateTaskDTO dto = objectMapper.readValue(data, CreateTaskDTO.class);
-            return userTaskService.createTask(dto, file);
+            return userTaskService.createTask(dto, files);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -62,9 +64,24 @@ public class UserTaskController {
         }
     }
 
-    @PutMapping("/updateTask")
-    public ResponseEntity<?> updateTask(@RequestBody UpdateTaskDTO dto) {
-        return userTaskService.updateTask(dto);
+    @PutMapping(
+            value = "/updateTask",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<?> updateTaskWithFiles(
+            @RequestParam("data") String data,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files
+    ) {
+        try {
+            UpdateTaskDTO dto = objectMapper.readValue(data, UpdateTaskDTO.class);
+            return userTaskService.updateTask(dto, files);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(
+                    ResUtil.createErrorRes("400", "Invalid request format: " + e.getMessage())
+            );
+        }
     }
 
     @DeleteMapping("/deleteTask")

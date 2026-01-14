@@ -241,7 +241,7 @@ public class UserTaskService {
     }
 
     @Transactional
-    public ResponseEntity<?> createTask(CreateTaskDTO dto, MultipartFile file) {
+    public ResponseEntity<?> createTask(CreateTaskDTO dto, List<MultipartFile> files) {
 
         log.info("START createTask | title={}, username={}",
                 dto.getTitle(), dto.getUsername());
@@ -250,31 +250,34 @@ public class UserTaskService {
         Users user = usersRepository.findByUsername(dto.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // 2️⃣ handle file
+        // 2️⃣ handle files
         List<AttachmentDTO> attachments = new ArrayList<>();
 
-        if (file != null && !file.isEmpty()) {
-
+        if (files != null && !files.isEmpty()) {
             File dir = new File("uploads");
             if (!dir.exists()) dir.mkdirs();
 
-            String storedName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            Path path = Paths.get("uploads", storedName);
+            for (MultipartFile file : files) {
+                if (file != null && !file.isEmpty()) {
+                    String storedName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+                    Path path = Paths.get("uploads", storedName);
 
-            try {
-                Files.write(path, file.getBytes());
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to store file");
+                    try {
+                        Files.write(path, file.getBytes());
+                    } catch (Exception e) {
+                        throw new RuntimeException("Failed to store file: " + file.getOriginalFilename());
+                    }
+
+                    AttachmentDTO attachment = new AttachmentDTO();
+                    attachment.setOriginalName(file.getOriginalFilename());
+                    attachment.setStoredName(storedName);
+                    attachment.setContentType(file.getContentType());
+                    attachment.setSize(file.getSize());
+                    attachment.setPath(path.toString());
+
+                    attachments.add(attachment);
+                }
             }
-
-            AttachmentDTO attachment = new AttachmentDTO();
-            attachment.setOriginalName(file.getOriginalFilename());
-            attachment.setStoredName(storedName);
-            attachment.setContentType(file.getContentType());
-            attachment.setSize(file.getSize());
-            attachment.setPath(path.toString());
-
-            attachments.add(attachment);
         }
 
         // 3️⃣ serialize attachments
@@ -305,7 +308,7 @@ public class UserTaskService {
     }
 
     @Transactional
-    public ResponseEntity<?> updateTask(UpdateTaskDTO dto) {
+    public ResponseEntity<?> updateTask(UpdateTaskDTO dto, List<MultipartFile> files) {
         log.info("START updateTask | taskId={}", dto.getTaskId());
 
         try {
@@ -323,6 +326,39 @@ public class UserTaskService {
             }
             if (dto.getDueDate() != null) {
                 task.setDueDate(dto.getDueDate());
+            }
+
+            // Handle file uploads - replace existing attachments if new files provided
+            if (files != null && !files.isEmpty()) {
+                List<AttachmentDTO> attachments = new ArrayList<>();
+                File dir = new File("uploads");
+                if (!dir.exists()) dir.mkdirs();
+
+                for (MultipartFile file : files) {
+                    if (file != null && !file.isEmpty()) {
+                        String storedName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+                        Path path = Paths.get("uploads", storedName);
+
+                        try {
+                            Files.write(path, file.getBytes());
+                        } catch (Exception e) {
+                            throw new RuntimeException("Failed to store file: " + file.getOriginalFilename());
+                        }
+
+                        AttachmentDTO attachment = new AttachmentDTO();
+                        attachment.setOriginalName(file.getOriginalFilename());
+                        attachment.setStoredName(storedName);
+                        attachment.setContentType(file.getContentType());
+                        attachment.setSize(file.getSize());
+                        attachment.setPath(path.toString());
+
+                        attachments.add(attachment);
+                    }
+                }
+
+                // Serialize and update attachments
+                String attachmentJson = new ObjectMapper().writeValueAsString(attachments);
+                task.setAttachments(attachmentJson);
             }
 
             task.setUpdatedDate(LocalDateTime.now());
