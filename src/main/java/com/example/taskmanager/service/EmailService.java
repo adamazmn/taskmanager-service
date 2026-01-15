@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Slf4j
-@Service
+// @Service  // Disabled - using ResendEmailService instead
 public class EmailService {
 
     @Autowired
