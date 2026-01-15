@@ -15,21 +15,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class UserTaskService {
-
-    private static final String UPLOAD_DIR = "uploads";
 
     @Autowired
     private UsersRepository usersRepository;
@@ -42,6 +35,9 @@ public class UserTaskService {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private SupabaseStorageService supabaseStorageService;
 
     @Autowired
     private com.example.taskmanager.config.JwtUtil jwtUtil;
@@ -250,32 +246,30 @@ public class UserTaskService {
         Users user = usersRepository.findByUsername(dto.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // 2️⃣ handle files
+        // 2️⃣ handle files - upload to Supabase Storage
         List<AttachmentDTO> attachments = new ArrayList<>();
 
         if (files != null && !files.isEmpty()) {
-            File dir = new File("uploads");
-            if (!dir.exists()) dir.mkdirs();
-
             for (MultipartFile file : files) {
                 if (file != null && !file.isEmpty()) {
-                    String storedName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-                    Path path = Paths.get("uploads", storedName);
-
                     try {
-                        Files.write(path, file.getBytes());
+                        // Upload to Supabase
+                        String storedName = supabaseStorageService.uploadFile(file);
+                        String publicUrl = supabaseStorageService.getPublicUrl(storedName);
+
+                        AttachmentDTO attachment = new AttachmentDTO();
+                        attachment.setOriginalName(file.getOriginalFilename());
+                        attachment.setStoredName(storedName);
+                        attachment.setContentType(file.getContentType());
+                        attachment.setSize(file.getSize());
+                        attachment.setPath(publicUrl); // Store the public URL
+
+                        attachments.add(attachment);
+                        log.info("File uploaded to Supabase: {}", storedName);
                     } catch (Exception e) {
+                        log.error("Failed to upload file: {}", e.getMessage());
                         throw new RuntimeException("Failed to store file: " + file.getOriginalFilename());
                     }
-
-                    AttachmentDTO attachment = new AttachmentDTO();
-                    attachment.setOriginalName(file.getOriginalFilename());
-                    attachment.setStoredName(storedName);
-                    attachment.setContentType(file.getContentType());
-                    attachment.setSize(file.getSize());
-                    attachment.setPath(path.toString());
-
-                    attachments.add(attachment);
                 }
             }
         }
@@ -331,28 +325,27 @@ public class UserTaskService {
             // Handle file uploads - replace existing attachments if new files provided
             if (files != null && !files.isEmpty()) {
                 List<AttachmentDTO> attachments = new ArrayList<>();
-                File dir = new File("uploads");
-                if (!dir.exists()) dir.mkdirs();
 
                 for (MultipartFile file : files) {
                     if (file != null && !file.isEmpty()) {
-                        String storedName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-                        Path path = Paths.get("uploads", storedName);
-
                         try {
-                            Files.write(path, file.getBytes());
+                            // Upload to Supabase
+                            String storedName = supabaseStorageService.uploadFile(file);
+                            String publicUrl = supabaseStorageService.getPublicUrl(storedName);
+
+                            AttachmentDTO attachment = new AttachmentDTO();
+                            attachment.setOriginalName(file.getOriginalFilename());
+                            attachment.setStoredName(storedName);
+                            attachment.setContentType(file.getContentType());
+                            attachment.setSize(file.getSize());
+                            attachment.setPath(publicUrl); // Store the public URL
+
+                            attachments.add(attachment);
+                            log.info("File uploaded to Supabase: {}", storedName);
                         } catch (Exception e) {
+                            log.error("Failed to upload file: {}", e.getMessage());
                             throw new RuntimeException("Failed to store file: " + file.getOriginalFilename());
                         }
-
-                        AttachmentDTO attachment = new AttachmentDTO();
-                        attachment.setOriginalName(file.getOriginalFilename());
-                        attachment.setStoredName(storedName);
-                        attachment.setContentType(file.getContentType());
-                        attachment.setSize(file.getSize());
-                        attachment.setPath(path.toString());
-
-                        attachments.add(attachment);
                     }
                 }
 
