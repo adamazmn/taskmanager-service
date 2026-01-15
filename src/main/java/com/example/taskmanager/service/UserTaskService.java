@@ -35,7 +35,7 @@ public class UserTaskService {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private EmailService emailService;
+    private ResendEmailService resendEmailService;
 
     @Autowired
     private SupabaseStorageService supabaseStorageService;
@@ -156,7 +156,7 @@ public class UserTaskService {
             Users savedUser = usersRepository.save(user);
 
             if (savedUser.getEmail() != null) {
-                emailService.sendRegistrationEmail(
+                resendEmailService.sendRegistrationEmail(
                         savedUser.getEmail(),
                         savedUser.getName()
                 );
