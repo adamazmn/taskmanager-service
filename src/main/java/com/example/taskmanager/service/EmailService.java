@@ -15,13 +15,12 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
-    @Value("${spring.mail.username:}")
+    @Value("${from.email}")
     private String fromEmail;
 
     @Async
     public void sendRegistrationEmail(String to, String name) {
         log.info("Sending registration email to {}", to);
-        log.info("SMTP USER from config = {}", fromEmail);
 
         // Skip if email is not configured
         if (fromEmail == null || fromEmail.isBlank()) {
